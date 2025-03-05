@@ -13,7 +13,5 @@ app.use(`${BASE_URL}/message`, messageRouter);
 
 
 app.listen(PORT, ()=>{
-  console.log(`Server running at PORT:${PORT}
-               The base url is: ${BASE_URL}
-  `)
+  console.log(`Server running at PORT:${PORT}`)
 })
