@@ -41,6 +41,10 @@ authRouter.post('/login', async (req: express.Request, res: express.Response) =>
         message: result.message,
         token: result.token
     });
+    res.cookie("JWT_TOKEN", result.token, {
+      httpOnly: true,
+      sameSite: "strict"
+    })
 });
 
 // Example of a protected route
@@ -50,7 +54,7 @@ authRouter.get('/profile', authMiddleware, (req: AuthRequest, res: express.Respo
         return;
     }
 
-    res.send({ message: "This is a protected route", user: req.user });
+    res.send({ user: req.user });
 });
 
 

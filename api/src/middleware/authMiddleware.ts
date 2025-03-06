@@ -1,22 +1,30 @@
 import type { Request, Response, NextFunction } from 'express';
 import jwt, { type JwtPayload } from 'jsonwebtoken';
-import type { AuthRequest } from '../lib/types';
-import type { UserData } from '../auth/DTO/user.dto';
+import HttpStatusCode from '../lib/statusCode';
+import { db } from '../lib/db';
 
-const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
+interface DecodedToken extends JwtPayload{
+  userId: string
+}
+
+const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     const token = req.headers['authorization']?.split(' ')[1]; // Get token from Authorization header
-
     if (!token) {
-        res.status(401).send({ message: 'Access denied. No token provided.' });
+        res.status(HttpStatusCode.UNAUTHORIZED).send({ message: 'Access denied. No token provided.' });
         return;
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret') as JwtPayload & UserData;
-        req.user = decoded; // Attach user info to request
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret') as DecodedToken
+        if(!decoded) return;
+        const user = await db.user.findFirst({
+          where:{id: decoded.userId}
+        })
+        if(!user) return;
+        req.user = user; // Attach user info to request
         next();
     } catch (error) {
-        res.status(400).send({ message: 'Invalid token.' });
+        res.status(HttpStatusCode.BAD_REQUEST).send({ message: 'Invalid token.' });
         return;
     }
 };
